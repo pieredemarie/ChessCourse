@@ -20,9 +20,5 @@ Backend покрыт интеграционными тестами (регист
 
 ## Запуск
 
-\`\`\`bash
-
 cd server
 go run cmd/main.go
-
-\`\`\`
