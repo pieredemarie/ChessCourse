@@ -1,6 +1,7 @@
 package course
 
 import (
+	"chesscourse/internal/apperror"
 	"chesscourse/internal/dto"
 	"chesscourse/internal/models"
 	"chesscourse/internal/storage"
@@ -31,6 +32,16 @@ func (s *courseService) GetCourseByID(id int) (*models.Course, error) {
 }
 
 func (s *courseService) CreateCourse(req dto.CreateCourseRequest) (*models.Course, error) {
+	if len(req.Title) < 3 || len(req.Title) > 100 {
+		return nil, apperror.ErrInvalidTitleCourse
+	}
+
+	if len(req.Description) < 100 || len(req.Description) > 300 {
+		return nil, apperror.ErrInvalidDescCourse
+	}
+	if req.Price < 100 || req.Price> 100000 {
+		return nil, apperror.ErrInvalidPriceCourse
+	}
 	course := &models.Course{
 		Title:       req.Title,
 		Description: req.Description,

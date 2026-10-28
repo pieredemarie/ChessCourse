@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"chesscourse/internal/apperror"
 	"chesscourse/internal/dto"
 	"chesscourse/internal/service/course"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -113,7 +115,21 @@ func (h *CourseHandler) CreateCourse(c *gin.Context) {
 	}
 
 	course, err := h.courseService.CreateCourse(req)
+	switch err {
+		
+	}
 	if err != nil {
+		switch {
+			case errors.Is(err, apperror.ErrInvalidTitleCourse):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid title"})
+			return
+			case errors.Is(err, apperror.ErrInvalidDescCourse):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid description"})
+			return
+			case errors.Is(err, apperror.ErrInvalidPriceCourse):
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid price"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create course"})
 		return
 	}
