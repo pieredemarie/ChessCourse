@@ -25,7 +25,9 @@ func setupTestDB() *gorm.DB {
 		panic("failed to connect database")
 	}
 
-	db.AutoMigrate(&models.User{}, &models.Category{}, &models.Course{}, &models.Enrollment{}, &models.Module{}, &models.Lesson{}, &models.UserProgress{})
+	if err := db.AutoMigrate(&models.User{}, &models.Category{}, &models.Course{}, &models.Enrollment{}, &models.Module{}, &models.Lesson{}, &models.UserProgress{}); err != nil {
+		panic(err)
+	}
 	return db
 }
 
@@ -57,7 +59,7 @@ func TestAuthRegister(t *testing.T) {
 
 		// Создаем пользователя
 		user := &models.User{Email: "duplicate@test.com", Name: "Test", Role: models.RoleStudent}
-		store.CreateUser(user)
+		require.NoError(t, store.CreateUser(user))
 
 		authService := authservice.NewAuthService(store)
 		authHandler := NewAuthHandler(authService)
@@ -110,7 +112,7 @@ func TestAuthLogin(t *testing.T) {
 			Role:         models.RoleStudent,
 			PasswordHash: string(hashedPassword),
 		}
-		store.CreateUser(user)
+		require.NoError(t, store.CreateUser(user))
 
 		authService := authservice.NewAuthService(store)
 		authHandler := NewAuthHandler(authService)

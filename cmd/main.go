@@ -9,10 +9,13 @@ import (
 	"chesscourse/internal/service/learning"
 	"chesscourse/internal/service/user"
 	"chesscourse/internal/storage"
+	"context"
+	"log"
+	"time"
 
 	_ "chesscourse/docs"
 
-	"github.com/gin-contrib/cors" // добавьте этот импорт
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -36,9 +39,10 @@ func main() {
 	storage.RunMigrations(db)
 	storage.SeedAdmin(db)
 	storage.SeedCategories(db)
+	storage.SeedTeacher(db)
+	storage.BackfillCourseOwners(db)
 	storage.SeedCourses(db)
 	storage.SeedModulesAndLessons(db)
-	storage.SeedTeacher(db)
 
 	store := storage.NewStorage(db)
 	authSvc := authservice.NewAuthService(store)
@@ -55,6 +59,15 @@ func main() {
 	learningService := learning.NewLearningService(store)
 	enrollmentService := enrollment.NewEnrollmentService(store)
 	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentService, learningService)
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			if _, err := enrollmentService.ExpireApproved(context.Background()); err != nil {
+				log.Printf("expire enrollments failed: %v", err)
+			}
+		}
+	}()
 
 	learningHandler := handlers.NewLearningHandler(learningService)
 
@@ -82,13 +95,14 @@ func main() {
 
 	// Все остальные API требуют авторизации
 	authorized := api.Group("/")
-	authorized.Use(authservice.AuthMiddleware())
+	authorized.Use(authservice.AuthMiddleware(store))
 	{
 		// Auth
 		authorized.GET("/auth/me", authHandler.Me)
 
 		authorized.GET("/enrollments", enrollmentHandler.GetMyEnrollments)
 		authorized.POST("/enrollments", enrollmentHandler.CreateEnrollment)
+		authorized.POST("/enrollments/:id/cancel", enrollmentHandler.CancelEnrollment)
 		authorized.POST("/enrollments/:id/pay", enrollmentHandler.PayForEnrollment)
 		// Courses - доступны всем авторизованным (и студентам, и админам)
 		authorized.GET("/courses", courseHandler.GetCourses)
@@ -117,19 +131,24 @@ func main() {
 			// Users management
 			adminRoutes.GET("/users", userHandler.GetUsers)
 			adminRoutes.PUT("/users/:id/role", userHandler.UpdateUserRole)
-
-			adminRoutes.POST("/courses", courseHandler.CreateCourse)
-			adminRoutes.PUT("/courses/:id", courseHandler.UpdateCourse)
-			adminRoutes.DELETE("/courses/:id", courseHandler.DeleteCourse)
+			adminRoutes.PUT("/users/:id", userHandler.UpdateUser)
+			adminRoutes.DELETE("/users/:id", userHandler.DeleteUser)
 
 		}
 		teacherRoutes := authorized.Group("/teacher")
 		teacherRoutes.Use(authservice.RequireTeacher())
 		{
+			teacherRoutes.GET("/courses", courseHandler.GetTeacherCourses)
+			teacherRoutes.POST("/courses", courseHandler.CreateCourse)
+			teacherRoutes.PUT("/courses/:id", courseHandler.UpdateCourse)
+			teacherRoutes.DELETE("/courses/:id", courseHandler.DeleteCourse)
+			teacherRoutes.POST("/courses/:id/archive", courseHandler.ArchiveCourse)
 			teacherRoutes.GET("/enrollments", enrollmentHandler.GetAllEnrollments)
 			teacherRoutes.PUT("/enrollments/:id", enrollmentHandler.UpdateEnrollmentStatus)
 		}
 	}
 
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }

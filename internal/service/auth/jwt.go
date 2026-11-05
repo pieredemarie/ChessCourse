@@ -19,7 +19,7 @@ type Claims struct {
 var jwtSecretKey = initJWTSecret()
 
 func initJWTSecret() []byte {
-	godotenv.Load()
+	_ = godotenv.Load() // Optional when environment variables are already provided.
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		log.Fatal("JWT_SECRET environment variable is not set")

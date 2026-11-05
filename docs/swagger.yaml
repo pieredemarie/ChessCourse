@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  dto.CategoryResponse:
+  chesscourse_internal_dto.CategoryResponse:
     properties:
       created_at:
         type: string
@@ -11,7 +11,53 @@ definitions:
       name:
         type: string
     type: object
-  dto.CreateCategoryRequest:
+  chesscourse_internal_dto.CourseResponse:
+    properties:
+      archived:
+        type: boolean
+      available_seats:
+        type: integer
+      capacity:
+        type: integer
+      category:
+        type: string
+      category_id:
+        type: integer
+      cover_url:
+        type: string
+      description:
+        type: string
+      duration:
+        description: часов
+        type: integer
+      format:
+        type: string
+      id:
+        type: integer
+      lessons:
+        description: уроков
+        type: integer
+      level:
+        type: string
+      location:
+        type: string
+      price:
+        type: number
+      start_date:
+        type: string
+      title:
+        type: string
+    type: object
+  chesscourse_internal_dto.CoursesListResponse:
+    properties:
+      courses:
+        items:
+          $ref: '#/definitions/chesscourse_internal_dto.CourseResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  chesscourse_internal_dto.CreateCategoryRequest:
     properties:
       description:
         type: string
@@ -20,25 +66,98 @@ definitions:
     required:
     - name
     type: object
-  dto.LoginRequest:
+  chesscourse_internal_dto.CreateCourseRequest:
+    properties:
+      capacity:
+        type: integer
+      category_id:
+        type: integer
+      cover_url:
+        type: string
+      description:
+        type: string
+      duration:
+        description: часы
+        type: integer
+      format:
+        type: string
+      lessons:
+        description: уроки
+        type: integer
+      level:
+        enum:
+        - beginner
+        - intermediate
+        - advanced
+        type: string
+      location:
+        type: string
+      price:
+        type: number
+      start_date:
+        type: string
+      title:
+        type: string
+    required:
+    - category_id
+    - level
+    - title
+    type: object
+  chesscourse_internal_dto.CreateEnrollmentRequest:
+    properties:
+      course_id:
+        type: integer
+    required:
+    - course_id
+    type: object
+  chesscourse_internal_dto.EnrollmentResponse:
+    properties:
+      admin_note:
+        type: string
+      course_id:
+        type: integer
+      course_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      payment_due_at:
+        type: string
+      rejection_reason:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+      user_email:
+        type: string
+      user_id:
+        type: integer
+      user_name:
+        type: string
+    type: object
+  chesscourse_internal_dto.LoginRequest:
     properties:
       email:
         type: string
       password:
         type: string
     type: object
-  dto.MeResponse:
+  chesscourse_internal_dto.MeResponse:
     properties:
       email:
         type: string
       id:
         type: integer
+      last_name:
+        type: string
       name:
         type: string
       role:
         type: string
     type: object
-  dto.RegisterRequest:
+  chesscourse_internal_dto.RegisterRequest:
     properties:
       email:
         type: string
@@ -47,11 +166,102 @@ definitions:
       password:
         type: string
     type: object
-  dto.UpdateCategoryRequest:
+  chesscourse_internal_dto.TestPaymentRequest:
+    properties:
+      success:
+        type: boolean
+    type: object
+  chesscourse_internal_dto.UpdateCategoryRequest:
     properties:
       description:
         type: string
       name:
+        type: string
+    type: object
+  chesscourse_internal_dto.UpdateCourseRequest:
+    properties:
+      capacity:
+        type: integer
+      category_id:
+        type: integer
+      cover_url:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      format:
+        type: string
+      lessons:
+        type: integer
+      level:
+        type: string
+      location:
+        type: string
+      price:
+        type: number
+      start_date:
+        type: string
+      title:
+        type: string
+    type: object
+  chesscourse_internal_dto.UpdateEnrollmentRequest:
+    properties:
+      admin_note:
+        type: string
+      rejection_reason:
+        type: string
+      status:
+        enum:
+        - approved
+        - rejected
+        type: string
+    required:
+    - status
+    type: object
+  chesscourse_internal_dto.UpdateUserRequest:
+    properties:
+      last_name:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  chesscourse_internal_dto.UserCourseResponse:
+    properties:
+      cover_url:
+        type: string
+      description:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      lessons:
+        type: integer
+      progress:
+        type: number
+      title:
+        type: string
+    type: object
+  chesscourse_internal_dto.UserEnrollmentResponse:
+    properties:
+      course_cover:
+        type: string
+      course_id:
+        type: integer
+      course_name:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      payment_due_at:
+        type: string
+      rejection_reason:
+        type: string
+      status:
         type: string
     type: object
 host: localhost:8080
@@ -72,7 +282,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateCategoryRequest'
+          $ref: '#/definitions/chesscourse_internal_dto.CreateCategoryRequest'
       produces:
       - application/json
       responses:
@@ -183,7 +393,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateCategoryRequest'
+          $ref: '#/definitions/chesscourse_internal_dto.UpdateCategoryRequest'
       produces:
       - application/json
       responses:
@@ -224,6 +434,45 @@ paths:
       summary: Обновить категорию
       tags:
       - categories
+  /api/admin/users/{id}:
+    delete:
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Удалить пользователя и освободить места
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Поля пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.UpdateUserRequest'
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Изменить имя, фамилию или роль пользователя
+      tags:
+      - users
   /api/auth/login:
     post:
       consumes:
@@ -235,7 +484,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.LoginRequest'
+          $ref: '#/definitions/chesscourse_internal_dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -275,7 +524,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MeResponse'
+            $ref: '#/definitions/chesscourse_internal_dto.MeResponse'
         "401":
           description: Не авторизован
           schema:
@@ -299,7 +548,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterRequest'
+          $ref: '#/definitions/chesscourse_internal_dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -336,7 +585,7 @@ paths:
           description: Список категорий
           schema:
             items:
-              $ref: '#/definitions/dto.CategoryResponse'
+              $ref: '#/definitions/chesscourse_internal_dto.CategoryResponse'
             type: array
         "500":
           description: Внутренняя ошибка сервера
@@ -362,7 +611,7 @@ paths:
         "200":
           description: Категория найдена
           schema:
-            $ref: '#/definitions/dto.CategoryResponse'
+            $ref: '#/definitions/chesscourse_internal_dto.CategoryResponse'
         "400":
           description: Неверный ID категории
           schema:
@@ -384,6 +633,285 @@ paths:
       summary: Получить категорию по ID
       tags:
       - categories
+  /api/courses:
+    get:
+      parameters:
+      - description: Поиск по названию
+        in: query
+        name: search
+        type: string
+      - description: Уровень (beginner/intermediate/advanced)
+        in: query
+        name: level
+        type: string
+      - description: ID категории
+        in: query
+        name: category_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chesscourse_internal_dto.CoursesListResponse'
+      summary: Получить список курсов с фильтрацией
+      tags:
+      - courses
+  /api/courses/{id}:
+    get:
+      parameters:
+      - description: ID курса
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chesscourse_internal_dto.CourseResponse'
+      summary: Получить курс по ID
+      tags:
+      - courses
+  /api/enrollments:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/chesscourse_internal_dto.UserEnrollmentResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Мои заявки
+      tags:
+      - enrollments
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Курс
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.CreateEnrollmentRequest'
+      responses:
+        "201":
+          description: Created
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Оставить заявку на курс
+      tags:
+      - enrollments
+  /api/enrollments/{id}/cancel:
+    post:
+      parameters:
+      - description: ID заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Отменить ожидающую заявку
+      tags:
+      - enrollments
+  /api/enrollments/{id}/pay:
+    post:
+      consumes:
+      - application/json
+      description: Тестовый режим без списания денег. success=true оплачивает, success=false
+        возвращает ошибку без смены статуса.
+      parameters:
+      - description: ID заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Результат тестовой оплаты
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.TestPaymentRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Подтвердить тестовую оплату
+      tags:
+      - enrollments
+  /api/my-courses:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/chesscourse_internal_dto.UserCourseResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Мои оплаченные курсы
+      tags:
+      - enrollments
+  /api/teacher/courses:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chesscourse_internal_dto.CoursesListResponse'
+      security:
+      - BearerAuth: []
+      summary: Курсы текущего преподавателя
+      tags:
+      - courses
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Данные курса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.CreateCourseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/chesscourse_internal_dto.CourseResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать новый курс
+      tags:
+      - courses
+  /api/teacher/courses/{id}:
+    delete:
+      parameters:
+      - description: ID курса
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Удалить курс
+      tags:
+      - courses
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID курса
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные курса
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.UpdateCourseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/chesscourse_internal_dto.CourseResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить курс
+      tags:
+      - courses
+  /api/teacher/courses/{id}/archive:
+    post:
+      parameters:
+      - description: ID курса
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Архивировать свой курс
+      tags:
+      - courses
+  /api/teacher/enrollments:
+    get:
+      parameters:
+      - description: Фильтр статуса
+        in: query
+        name: status
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/chesscourse_internal_dto.EnrollmentResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Заявки на курсы преподавателя
+      tags:
+      - enrollments
+  /api/teacher/enrollments/{id}:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ID заявки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Решение
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/chesscourse_internal_dto.UpdateEnrollmentRequest'
+      responses:
+        "204":
+          description: No Content
+      security:
+      - BearerAuth: []
+      summary: Одобрить или отклонить заявку
+      tags:
+      - enrollments
 securityDefinitions:
   BearerAuth:
     description: 'Введите токен в формате: Bearer {token}'

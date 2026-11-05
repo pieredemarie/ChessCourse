@@ -18,4 +18,8 @@ var (
 	ErrCategoryNotFound   = errors.New("category not found")
 	ErrCategoryExists     = errors.New("category already exists")
 	ErrCategoryHasCourses = errors.New("category has associated courses")
+
+	ErrInvalidTitleCourse = errors.New("course title is invalid")
+	ErrInvalidDescCourse = errors.New("course description is invalid")
+	ErrInvalidPriceCourse = errors.New("course price is invalid")
 )

@@ -1,14 +1,21 @@
 package dto
 
 type UserResponse struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	LastName string `json:"last_name"`
+	Email    string `json:"email"`
+	Role     string `json:"role"`
 }
 
 type UpdateUserRoleRequest struct {
-	Role string `json:"role" binding:"required,oneof=Student Admin"`
+	Role string `json:"role" binding:"required,oneof=Student Teacher Admin"`
+}
+
+type UpdateUserRequest struct {
+	Name     *string `json:"name"`
+	LastName *string `json:"last_name"`
+	Role     *string `json:"role"`
 }
 
 type UsersListResponse struct {

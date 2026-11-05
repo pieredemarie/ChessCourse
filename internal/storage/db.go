@@ -20,7 +20,7 @@ func NewStorage(db *gorm.DB) *Storage {
 	}
 }
 func NewPostgresDB() *gorm.DB {
-	godotenv.Load()
+	_ = godotenv.Load() // Optional when environment variables are already provided.
 
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
