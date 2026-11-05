@@ -11,8 +11,9 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 type MeResponse struct {
-	ID    int    `json:"id"`
-	Email string `json:"email"`
-	Name  string `json:"name"`
-	Role  string `json:"role"`
+	ID       int    `json:"id"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	LastName string `json:"last_name"`
+	Role     string `json:"role"`
 }

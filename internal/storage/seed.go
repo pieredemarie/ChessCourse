@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -151,6 +152,18 @@ func SeedCourses(db *gorm.DB) {
 
 	created := 0
 	for _, course := range courses {
+		var teacher models.User
+		if err := db.Where("email = ?", "teacher@chess.com").First(&teacher).Error; err != nil {
+			log.Printf("teacher missing: %v", err)
+			return
+		}
+		course.AuthorID = teacher.ID
+		course.Format = models.FormatOnlineGroup
+		course.Capacity = 10
+		course.StartDate = time.Now().AddDate(0, 1, 0).Truncate(24 * time.Hour)
+		if course.Price < 100 {
+			course.Price = 100
+		}
 		var existing models.Course
 		result := db.Where("title = ?", course.Title).First(&existing)
 		if result.Error == nil {

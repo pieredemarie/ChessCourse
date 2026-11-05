@@ -1,13 +1,14 @@
 package auth
 
 import (
+	"chesscourse/internal/storage"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(store storage.AuthStorage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -23,14 +24,16 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenStr = strings.TrimSpace(tokenStr)
 
-		userID, role, err := ValidateToken(tokenStr)
+		userID, _, err := ValidateToken(tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
 			return
 		}
 
+		user, err := store.GetUserByID(userID)
+		if err != nil { c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error":"user not found"}); return }
 		c.Set("userID", userID)
-		c.Set("role", role)
+		c.Set("role", user.Role)
 		c.Next()
 	}
 }
@@ -48,7 +51,7 @@ func RequireAdminMiddleware() gin.HandlerFunc {
 func RequireTeacher() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, exists := c.Get("role")
-		if !exists || role == "Student" {
+		if !exists || role != "Teacher" {
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "forbidden"})
 			return
 		}
